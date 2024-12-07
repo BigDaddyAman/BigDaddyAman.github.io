@@ -4,9 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Site</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <h1>Welcome to My Site</h1>
-    <!-- This is a comment to trigger a GitHub Pages rebuild -->
+    <p>Update: Adding this paragraph to trigger a rebuild.</p>
+
+    <!-- CAPTCHA Form -->
+    <form id="captcha-form" action="https://your-api-endpoint.com/verify-captcha" method="POST">
+        <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script src="script.js"></script>
 </body>
 </html>
