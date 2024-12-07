@@ -6,7 +6,7 @@
     <title>Get Video Link</title>
 </head>
 <body>
-    <button id="getLink" data-video-id="your_video_id_here">Get Link</button>
+    <button id="getLink" data-video-id="">Get Link</button>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
@@ -19,7 +19,7 @@
         document.getElementById('getLink').addEventListener('click', function() {
             const videoId = this.getAttribute('data-video-id');
 
-            fetch('http://127.0.0.1:5000/send-video-link', {
+            fetch('https://kakifilem.netlify.app/.netlify/functions/send-video-link', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
