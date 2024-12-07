@@ -64,44 +64,4 @@ exports.handler = async function(event, context) {
         }
 
         // Send the video link to the bot
-        const botServerUrl = `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`;
-        const response = await fetch(botServerUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                chat_id: '<USER_CHAT_ID>',
-                text: `Here is your video link: ${videoLink}`
-            })
-        });
-
-        const data = await response.json();
-        console.log('Response from bot server:', data);
-
-        return {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            },
-            body: JSON.stringify({ success: true, message: 'Video link sent!' })
-        };
-    } catch (error) {
-        console.error('Error sending video link:', error);
-        return {
-            statusCode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            },
-            body: JSON.stringify({ success: false, error: 'Internal Server Error' })
-        };
-    }
-};
-
-// Function to retrieve video link from your database
-async function getVideoLinkFromDatabase(videoId) {
-    console.log(`Retrieving video link for ID: ${videoId}`);
-    return `https://your-video-storage.com/videos/${videoId}.mp4`;
-}
+        const bot
