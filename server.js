@@ -7,27 +7,39 @@ const port = 3000;
 
 app.use(bodyParser.json());
 
-app.post('/verify-captcha', (req, res) => {
-    const secretKey = '6LeH9pQqAAAAAE7u53YfzkuM8Kd7hKKZiFs3ycyB';
-    const token = req.body['recaptcha_token'];
+// Endpoint to handle forwarding the video link
+app.post('/send-video-link', async (req, res) => {
+    const { videoId } = req.body;
 
-    const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`;
+    if (!videoId) {
+        return res.status(400).json({ success: false, error: 'Missing videoId' });
+    }
 
-    fetch(verificationUrl, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                res.json({ success: true });
-            } else {
-                res.json({ success: false });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            res.status(500).json({ success: false, error: 'Internal Server Error' });
+    try {
+        // Example logic to handle the video link
+        console.log(`Received video link for video ID: ${videoId}`);
+        
+        // Logic to communicate with the bot
+        const botServerUrl = 'https://your-bot-server.com/send-video-link';
+        const response = await fetch(botServerUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ videoId })
         });
+
+        const data = await response.json();
+        console.log('Response from bot server:', data);
+        
+        res.json({ success: true, message: 'Video link sent!' });
+    } catch (error) {
+        console.error('Error sending video link:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
 });
 
+// Start the server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });

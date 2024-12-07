@@ -2,7 +2,6 @@ import logging
 import sqlite3
 from telethon import TelegramClient, events, Button
 from telethon.tl.types import Document, DocumentAttributeFilename
-import requests
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -23,7 +22,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS files
              (id TEXT PRIMARY KEY, access_hash TEXT, file_reference BLOB, mime_type TEXT, caption TEXT, keywords TEXT, file_name TEXT)''')
 conn.commit()
 
-CAPTCHA_URL = 'https://your-captcha-site.com/verify?file_id='
+VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.webm', '.ts', '.mov', '.avi', '.flv', '.wmv', '.m4v', '.mpeg', '.mpg', '.3gp', '.3g2']
 
 async def main():
     await client.start()
@@ -79,7 +78,7 @@ async def main():
 
                 if video_results:
                     buttons = [
-                        [Button.inline(file_name or caption or "Unknown File", data=f'{CAPTCHA_URL}{id}')]
+                        [Button.inline(file_name or caption or "Unknown File", str(id))]
                         for id, caption, file_name in video_results
                     ]
                     logging.debug(f"Generated buttons: {buttons}")
@@ -93,32 +92,26 @@ async def main():
         data = event.data.decode('utf-8')
         logging.debug(f"Callback query data: {data}")
 
-        # Simulate CAPTCHA verification
-        response = requests.get(data)  # Assuming the CAPTCHA URL returns the file ID on success
-        if response.status_code == 200:
-            file_id = response.text
-            c.execute("SELECT id, access_hash, file_reference, mime_type, caption, file_name FROM files WHERE id=?", (file_id,))
-            db_result = c.fetchone()
-            logging.debug(f"Database fetch result: {db_result}")
+        c.execute("SELECT id, access_hash, file_reference, mime_type, caption, file_name FROM files WHERE id=?", (data,))
+        db_result = c.fetchone()
+        logging.debug(f"Database fetch result: {db_result}")
 
-            if db_result:
-                id, access_hash, file_reference, mime_type, caption, file_name = db_result
-                logging.debug(f"Sending video file: id={id}, access_hash={access_hash}, file_reference={file_reference}, mime_type={mime_type}, caption={caption}, file_name={file_name}")
+        if db_result:
+            id, access_hash, file_reference, mime_type, caption, file_name = db_result
+            logging.debug(f"Sending video file: id={id}, access_hash={access_hash}, file_reference={file_reference}, mime_type={mime_type}, caption={caption}, file_name={file_name}")
 
-                document = Document(
-                    id=int(id),
-                    access_hash=int(access_hash),
-                    file_reference=file_reference,
-                    date=None,
-                    mime_type=mime_type,
-                    size=None,
-                    dc_id=None,
-                    attributes=[]
-                )
+            document = Document(
+                id=int(id),
+                access_hash=int(access_hash),
+                file_reference=file_reference,
+                date=None,
+                mime_type=mime_type,
+                size=None,
+                dc_id=None,
+                attributes=[]
+            )
 
-                await client.send_file(event.chat_id, document, caption=caption, attributes=[DocumentAttributeFilename(file_name=file_name)] if file_name else None)
-        else:
-            await event.reply("CAPTCHA verification failed. Please try again.")
+            await client.send_file(event.chat_id, document, caption=caption, attributes=[DocumentAttributeFilename(file_name=file_name)] if file_name else None)
 
     @client.on(events.NewMessage(pattern='/listdb'))
     async def list_db(event):
