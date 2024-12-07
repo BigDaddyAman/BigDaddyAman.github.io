@@ -1,7 +1,8 @@
-const fetch = require('node-fetch');
-require('dotenv').config();
+import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+dotenv.config();
 
-exports.handler = async function(event, context) {
+export async function handler(event, context) {
     console.log("Function invoked");
 
     if (event.httpMethod === 'OPTIONS') {
@@ -108,7 +109,7 @@ exports.handler = async function(event, context) {
             body: JSON.stringify({ success: false, error: 'Internal Server Error' })
         };
     }
-};
+}
 
 async function getVideoLinkFromDatabase(videoId) {
     console.log(`Retrieving video link for ID: ${videoId}`);
