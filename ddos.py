@@ -33,18 +33,22 @@ def send_video_link():
     try:
         data = request.json
         video_id = data.get('videoId')
+        logging.debug(f"Received video ID: {video_id}")
 
         if not video_id:
+            logging.error("Missing video ID")
             return jsonify({"success": False, "error": "Missing videoId"}), 400
 
         c.execute("SELECT id, access_hash, file_reference, mime_type, caption, file_name FROM files WHERE id=?", (video_id,))
         db_result = c.fetchone()
+        logging.debug(f"Database result: {db_result}")
 
         if not db_result:
+            logging.error("Video not found")
             return jsonify({"success": False, "error": "Video not found"}), 404
 
         id, access_hash, file_reference, mime_type, caption, file_name = db_result
-        logging.debug(f"Sending video file: id={id}, access_hash={access_hash}, file_reference={file_reference}, mime_type={mime_type}, caption={caption}, file_name={file_name}")
+        logging.debug(f"Preparing to send video file: {file_name}")
 
         document = Document(
             id=int(id),
@@ -62,9 +66,10 @@ def send_video_link():
 
         client.loop.run_until_complete(send_file())
 
+        logging.debug("Video link sent successfully")
         return jsonify({"success": True, "message": "Video link sent!"}), 200
     except Exception as e:
-        logging.error(f"Error handling request: {e}")
+        logging.error(f"Error handling request: {e}", exc_info=True)
         return jsonify({"success": False, "error": "Internal Server Error"}), 500
 
 if __name__ == '__main__':
