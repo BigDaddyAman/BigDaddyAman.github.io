@@ -61,7 +61,6 @@ exports.handler = async function(event, context) {
     try {
         console.log(`Received video link for video ID: ${videoId}`);
 
-        // Fetch video link from database
         const videoLink = await getVideoLinkFromDatabase(videoId);
 
         if (!videoLink) {
@@ -76,11 +75,12 @@ exports.handler = async function(event, context) {
             };
         }
 
-        // Send video link to bot
         const botServerUrl = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`;
         const response = await fetch(botServerUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 chat_id: process.env.USER_CHAT_ID,
                 text: `Here is your video link: ${videoLink}`
@@ -97,14 +97,20 @@ exports.handler = async function(event, context) {
 
         return {
             statusCode: 200,
-            headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' },
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
             body: JSON.stringify({ success: true, message: 'Video link sent!' })
         };
     } catch (error) {
         console.error('Error sending video link:', error);
         return {
             statusCode: 500,
-            headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' },
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
             body: JSON.stringify({ success: false, error: 'Internal Server Error' })
         };
     }

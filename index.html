@@ -12,7 +12,7 @@
         document.getElementById('getLink').addEventListener('click', function() {
             const videoId = this.getAttribute('data-video-id');
 
-            fetch('https://kakifilem.netlify.app/.netlify/functions/send-video-link', {
+            fetch('http://127.0.0.1:5000/send-video-link', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
