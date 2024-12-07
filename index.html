@@ -11,10 +11,10 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const videoId = urlParams.get('videoId');
-        
+
         document.getElementById('getLink').addEventListener('click', function() {
             fetch('https://kakifilem.netlify.app/.netlify/functions/send-video-link', {
-                method: 'POST',
+                method: 'POST',  // Ensure the method is POST
                 headers: {
                     'Content-Type': 'application/json'
                 },

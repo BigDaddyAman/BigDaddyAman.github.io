@@ -28,7 +28,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS files
              (id TEXT PRIMARY KEY, access_hash TEXT, file_reference BLOB, mime_type TEXT, caption TEXT, keywords TEXT, file_name TEXT)''')
 conn.commit()
 
-@app.route('/send-video-link', methods=['POST'])
+@app.route('/send-video-link', methods=['POST'])  # Ensure POST method is specified
 def send_video_link():
     try:
         data = request.json
