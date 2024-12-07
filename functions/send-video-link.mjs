@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+require('dotenv').config();
 
 exports.handler = async function(event, context) {
     console.log("Function invoked");
@@ -74,14 +75,14 @@ exports.handler = async function(event, context) {
             };
         }
 
-        const botServerUrl = `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`;
+        const botServerUrl = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`;
         const response = await fetch(botServerUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                chat_id: '<USER_CHAT_ID>',
+                chat_id: process.env.USER_CHAT_ID,
                 text: `Here is your video link: ${videoLink}`
             })
         });
