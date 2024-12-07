@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Site</title>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeH9pQqAAAAAPdEyc7IJS0woEx3ujyqOYNM7lwC"></script>
 </head>
 <body>
     <h1>Welcome to My Site</h1>
@@ -12,8 +12,7 @@
 
     <!-- CAPTCHA Form -->
     <form id="captcha-form" action="https://your-api-endpoint.com/verify-captcha" method="POST">
-        <div class="g-recaptcha" data-sitekey="6LeH9pQqAAAAAPdEyc7IJS0woEx3ujyqOYNM7lwC"></div>
-        <br>
+        <input type="hidden" name="recaptcha_token" id="recaptcha_token">
         <button type="submit">Submit</button>
     </form>
 
