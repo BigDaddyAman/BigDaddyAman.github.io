@@ -6,7 +6,7 @@ document.getElementById('captcha-form').onsubmit = function(event) {
             document.getElementById('recaptcha_token').value = token;
 
             // Now submit the form
-            fetch('https://your-api-endpoint.com/verify-captcha', {
+            fetch('http://localhost:3000/verify-captcha', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

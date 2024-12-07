@@ -1,4 +1,4 @@
-import express from 'express'; // Use import for express
+import express from 'express';
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
 
