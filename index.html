@@ -8,9 +8,9 @@
         function handleClick() {
             const urlParams = new URLSearchParams(window.location.search);
             const videoId = urlParams.get('videoId');
-            
+
             // Send the video link back to the bot server
-            fetch(`https://your-bot-server.com/send-video-link`, {
+            fetch(`https://your-server-url.com/send-video-link`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

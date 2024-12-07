@@ -53,6 +53,32 @@ async def main():
                     logging.debug(f"No matching video files found for keyword '{text}'.")
                     await event.reply('No matching video files found.')
 
+    @client.on(events.NewMessage(pattern='/send-video-link'))
+    async def send_video(event):
+        video_id = event.message.message.split(' ')[1]
+        logging.debug(f"Received request to send video with ID: {video_id}")
+
+        c.execute("SELECT id, access_hash, file_reference, mime_type, caption, file_name FROM files WHERE id=?", (video_id,))
+        db_result = c.fetchone()
+        logging.debug(f"Database fetch result: {db_result}")
+
+        if db_result:
+            id, access_hash, file_reference, mime_type, caption, file_name = db_result
+            logging.debug(f"Sending video file: id={id}, access_hash={access_hash}, file_reference={file_reference}, mime_type={mime_type}, caption={caption}, file_name={file_name}")
+
+            document = Document(
+                id=int(id),
+                access_hash=int(access_hash),
+                file_reference=file_reference,
+                date=None,
+                mime_type=mime_type,
+                size=None,
+                dc_id=None,
+                attributes=[DocumentAttributeFilename(file_name=file_name)] if file_name else []
+            )
+
+            await client.send_file(event.chat_id, document, caption=caption)
+
     await client.run_until_disconnected()
 
 with client:
