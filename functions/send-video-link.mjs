@@ -3,6 +3,18 @@ const fetch = require('node-fetch');
 exports.handler = async function(event, context) {
     console.log("Function invoked");
 
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+            },
+            body: JSON.stringify({ success: true })
+        };
+    }
+
     if (event.httpMethod !== 'POST') {
         console.log("Invalid method:", event.httpMethod);
         return {
