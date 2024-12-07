@@ -29,7 +29,7 @@ app.post('/send-video-link', async (req, res) => {
         }
 
         // Send the video link to the bot
-        const botServerUrl = 'https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage';
+        const botServerUrl = `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`;
         const response = await fetch(botServerUrl, {
             method: 'POST',
             headers: {
