@@ -87,6 +87,11 @@ exports.handler = async function(event, context) {
             })
         });
 
+        if (!response.ok) {
+            console.error('Error response from bot server:', response.status, response.statusText);
+            throw new Error(`Error response from bot server: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
         console.log('Response from bot server:', data);
 
