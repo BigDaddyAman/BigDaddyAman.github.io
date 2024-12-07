@@ -1,7 +1,7 @@
-from telethon import TelegramClient, events, Button
-from telethon.tl.types import Document, DocumentAttributeFilename
 import logging
 import sqlite3
+from telethon import TelegramClient, events, Button
+from telethon.tl.types import Document, DocumentAttributeFilename
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -31,7 +31,41 @@ async def main():
     @client.on(events.NewMessage)
     async def handle_messages(event):
         if event.is_private:
-            if event.message.text:
+            if event.message.document:
+                document = event.message.document
+                file_name = None
+                for attr in event.message.document.attributes:
+                    if isinstance(attr, DocumentAttributeFilename):
+                        file_name = attr.file_name
+                        break
+
+                caption = event.message.message or ""
+                keywords = f"{caption.lower()} {file_name.lower()}"
+
+                logging.debug(f"Received document message: {event.message}")
+                logging.debug(f"Caption: {caption}")
+                logging.debug(f"Keywords: {keywords}")
+                logging.debug(f"File Name: {file_name}")
+                logging.debug(f"Mime Type: {document.mime_type}")
+
+                # Store necessary metadata
+                id = document.id
+                access_hash = document.access_hash
+                file_reference = document.file_reference
+                mime_type = document.mime_type
+
+                # Insert file metadata into database
+                logging.debug(f"Inserting file metadata: id={id}, access_hash={access_hash}, file_reference={file_reference}, mime_type={mime_type}, caption={caption}, keywords={keywords}, file_name={file_name}")
+                c.execute("REPLACE INTO files (id, access_hash, file_reference, mime_type, caption, keywords, file_name) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                          (id, access_hash, file_reference, mime_type, caption, keywords, file_name))
+                conn.commit()
+                await event.reply('File metadata stored.')
+
+            elif event.message.text:
+                if event.message.text.startswith('/'):
+                    logging.debug(f"Ignoring command: {event.message.text}")
+                    return
+
                 text = event.message.text.lower().strip()
                 logging.debug(f"Received text message: {text}")
 
@@ -44,7 +78,7 @@ async def main():
 
                 if video_results:
                     buttons = [
-                        [Button.url(file_name or caption or "Unknown File", f"https://bigdaddyaman.github.io/?videoId={id}")]
+                        [Button.inline(file_name or caption or "Unknown File", str(id))]
                         for id, caption, file_name in video_results
                     ]
                     logging.debug(f"Generated buttons: {buttons}")
@@ -53,12 +87,12 @@ async def main():
                     logging.debug(f"No matching video files found for keyword '{text}'.")
                     await event.reply('No matching video files found.')
 
-    @client.on(events.NewMessage(pattern='/send-video-link'))
-    async def send_video(event):
-        video_id = event.message.message.split(' ')[1]
-        logging.debug(f"Received request to send video with ID: {video_id}")
+    @client.on(events.CallbackQuery)
+    async def callback_query_handler(event):
+        data = event.data.decode('utf-8')
+        logging.debug(f"Callback query data: {data}")
 
-        c.execute("SELECT id, access_hash, file_reference, mime_type, caption, file_name FROM files WHERE id=?", (video_id,))
+        c.execute("SELECT id, access_hash, file_reference, mime_type, caption, file_name FROM files WHERE id=?", (data,))
         db_result = c.fetchone()
         logging.debug(f"Database fetch result: {db_result}")
 
@@ -74,10 +108,26 @@ async def main():
                 mime_type=mime_type,
                 size=None,
                 dc_id=None,
-                attributes=[DocumentAttributeFilename(file_name=file_name)] if file_name else []
+                attributes=[]
             )
 
-            await client.send_file(event.chat_id, document, caption=caption)
+            await client.send_file(event.chat_id, document, caption=caption, attributes=[DocumentAttributeFilename(file_name=file_name)] if file_name else None)
+
+    @client.on(events.NewMessage(pattern='/listdb'))
+    async def list_db(event):
+        logging.debug("Executing /listdb command")
+        c.execute("SELECT * FROM files")
+        results = c.fetchall()
+        logging.debug(f"Database entries: {results}")
+        await event.reply(f"Database entries: {results}")
+
+    @client.on(events.NewMessage(pattern='/deletedb'))
+    async def delete_db(event):
+        logging.debug("Executing /deletedb command")
+        c.execute("DELETE FROM files")
+        conn.commit()
+        logging.debug("All entries deleted from the database")
+        await event.reply("All entries deleted from the database.")
 
     await client.run_until_disconnected()
 
