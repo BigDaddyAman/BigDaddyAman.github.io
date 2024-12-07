@@ -22,18 +22,22 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ videoId })
-            }).then(response => response.json())
-              .then(data => {
-                  console.log('Response data:', data);
-                  if (data.success) {
-                      alert('Video link sent!');
-                  } else {
-                      alert('Failed to send video link.');
-                  }
-              }).catch(error => {
-                  console.error('Error:', error);
-                  alert('An error occurred.');
-              });
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            }).then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    alert('Video link sent!');
+                } else {
+                    alert('Failed to send video link.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred.');
+            });
         }
     </script>
     <style>
