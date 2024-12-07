@@ -16,10 +16,8 @@ app.post('/send-video-link', async (req, res) => {
     }
 
     try {
-        // Example logic to handle the video link
         console.log(`Received video link for video ID: ${videoId}`);
         
-        // Logic to communicate with the bot
         const botServerUrl = 'https://your-bot-server.com/send-video-link';
         const response = await fetch(botServerUrl, {
             method: 'POST',

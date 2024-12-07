@@ -44,7 +44,7 @@ async def main():
 
                 if video_results:
                     buttons = [
-                        [Button.url(file_name or caption or "Unknown File", f"http://your-site.com/get-link?videoId={id}")]
+                        [Button.url(file_name or caption or "Unknown File", f"https://bigdaddyaman.github.io/?videoId={id}")]
                         for id, caption, file_name in video_results
                     ]
                     logging.debug(f"Generated buttons: {buttons}")
