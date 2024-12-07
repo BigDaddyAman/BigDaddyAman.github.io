@@ -1,12 +1,16 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-    console.log("Function invoked"); // Log when function is invoked
+    console.log("Function invoked");
 
     if (event.httpMethod !== 'POST') {
-        console.log("Invalid method:", event.httpMethod); // Log invalid method
+        console.log("Invalid method:", event.httpMethod);
         return {
             statusCode: 405,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
             body: JSON.stringify({ success: false, error: 'Method Not Allowed' })
         };
     }
@@ -14,11 +18,15 @@ exports.handler = async function(event, context) {
     let body;
     try {
         body = JSON.parse(event.body);
-        console.log("Parsed body:", body); // Log parsed body
+        console.log("Parsed body:", body);
     } catch (err) {
-        console.log("Error parsing body:", err); // Log body parsing error
+        console.log("Error parsing body:", err);
         return {
             statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
             body: JSON.stringify({ success: false, error: 'Invalid JSON' })
         };
     }
@@ -26,9 +34,13 @@ exports.handler = async function(event, context) {
     const { videoId } = body;
 
     if (!videoId) {
-        console.log("Missing videoId"); // Log missing videoId
+        console.log("Missing videoId");
         return {
             statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
             body: JSON.stringify({ success: false, error: 'Missing videoId' })
         };
     }
@@ -40,9 +52,13 @@ exports.handler = async function(event, context) {
         const videoLink = await getVideoLinkFromDatabase(videoId);
 
         if (!videoLink) {
-            console.log('Video not found in database'); // Log if video not found
+            console.log('Video not found in database');
             return {
                 statusCode: 404,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type'
+                },
                 body: JSON.stringify({ success: false, error: 'Video not found' })
             };
         }
@@ -61,16 +77,24 @@ exports.handler = async function(event, context) {
         });
 
         const data = await response.json();
-        console.log('Response from bot server:', data); // Log response from bot server
+        console.log('Response from bot server:', data);
 
         return {
             statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
             body: JSON.stringify({ success: true, message: 'Video link sent!' })
         };
     } catch (error) {
-        console.error('Error sending video link:', error); // Log error for debugging
+        console.error('Error sending video link:', error);
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
             body: JSON.stringify({ success: false, error: 'Internal Server Error' })
         };
     }
@@ -78,7 +102,6 @@ exports.handler = async function(event, context) {
 
 // Function to retrieve video link from your database
 async function getVideoLinkFromDatabase(videoId) {
-    console.log(`Retrieving video link for ID: ${videoId}`); // Log retrieval process
-    // Simulating retrieval process; replace with actual database logic
+    console.log(`Retrieving video link for ID: ${videoId}`);
     return `https://your-video-storage.com/videos/${videoId}.mp4`;
 }
