@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 require('dotenv').config();
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
     console.log("Function invoked");
 
     if (event.httpMethod === 'OPTIONS') {
@@ -10,9 +10,9 @@ exports.handler = async function(event, context) {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
             },
-            body: JSON.stringify({ success: true })
+            body: JSON.stringify({ success: true }),
         };
     }
 
@@ -22,9 +22,9 @@ exports.handler = async function(event, context) {
             statusCode: 405,
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                'Access-Control-Allow-Headers': 'Content-Type',
             },
-            body: JSON.stringify({ success: false, error: 'Method Not Allowed' })
+            body: JSON.stringify({ success: false, error: 'Method Not Allowed' }),
         };
     }
 
@@ -33,28 +33,28 @@ exports.handler = async function(event, context) {
         body = JSON.parse(event.body);
         console.log("Parsed body:", body);
     } catch (err) {
-        console.log("Error parsing body:", err);
+        console.error("Error parsing body:", err);
         return {
             statusCode: 400,
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                'Access-Control-Allow-Headers': 'Content-Type',
             },
-            body: JSON.stringify({ success: false, error: 'Invalid JSON' })
+            body: JSON.stringify({ success: false, error: 'Invalid JSON' }),
         };
     }
 
     const { videoId } = body;
 
     if (!videoId) {
-        console.log("Missing videoId");
+        console.error("Missing videoId");
         return {
             statusCode: 400,
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                'Access-Control-Allow-Headers': 'Content-Type',
             },
-            body: JSON.stringify({ success: false, error: 'Missing videoId' })
+            body: JSON.stringify({ success: false, error: 'Missing videoId' }),
         };
     }
 
@@ -64,32 +64,34 @@ exports.handler = async function(event, context) {
         const videoLink = await getVideoLinkFromDatabase(videoId);
 
         if (!videoLink) {
-            console.log('Video not found in database');
+            console.error('Video not found in database');
             return {
                 statusCode: 404,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type'
+                    'Access-Control-Allow-Headers': 'Content-Type',
                 },
-                body: JSON.stringify({ success: false, error: 'Video not found' })
+                body: JSON.stringify({ success: false, error: 'Video not found' }),
             };
         }
 
         const botServerUrl = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`;
+        console.log('Sending video link to Telegram bot:', botServerUrl);
+
         const response = await fetch(botServerUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 chat_id: process.env.USER_CHAT_ID,
-                text: `Here is your video link: ${videoLink}`
-            })
+                text: `Here is your video link: ${videoLink}`,
+            }),
         });
 
         if (!response.ok) {
             console.error('Error response from bot server:', response.status, response.statusText);
-            throw new Error(`Error response from bot server: ${response.status} ${response.statusText}`);
+            throw new Error(`Bot server error: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -99,9 +101,9 @@ exports.handler = async function(event, context) {
             statusCode: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                'Access-Control-Allow-Headers': 'Content-Type',
             },
-            body: JSON.stringify({ success: true, message: 'Video link sent!' })
+            body: JSON.stringify({ success: true, message: 'Video link sent!' }),
         };
     } catch (error) {
         console.error('Error sending video link:', error);
@@ -109,9 +111,9 @@ exports.handler = async function(event, context) {
             statusCode: 500,
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                'Access-Control-Allow-Headers': 'Content-Type',
             },
-            body: JSON.stringify({ success: false, error: 'Internal Server Error' })
+            body: JSON.stringify({ success: false, error: 'Internal Server Error' }),
         };
     }
 };
