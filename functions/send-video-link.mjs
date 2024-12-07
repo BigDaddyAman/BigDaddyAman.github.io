@@ -1,47 +1,116 @@
-const axios = require("axios");
+const fetch = require('node-fetch');
+require('dotenv').config();
 
-exports.handler = async function (event, context) {
-  const queryParams = event.queryStringParameters;
-  const token = queryParams.token;
+exports.handler = async function(event, context) {
+    console.log("Function invoked");
 
-  if (!token) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ message: "Token is missing!" }),
-    };
-  }
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+            },
+            body: JSON.stringify({ success: true })
+        };
+    }
 
-  // Simulate token validation (You should verify this with your database)
-  const isValidToken = token === "12345"; // Replace this with actual token verification logic
+    if (event.httpMethod !== 'POST') {
+        console.log("Invalid method:", event.httpMethod);
+        return {
+            statusCode: 405,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            body: JSON.stringify({ success: false, error: 'Method Not Allowed' })
+        };
+    }
 
-  if (!isValidToken) {
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ message: "Invalid or expired token!" }),
-    };
-  }
+    let body;
+    try {
+        body = JSON.parse(event.body);
+        console.log("Parsed body:", body);
+    } catch (err) {
+        console.log("Error parsing body:", err);
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            body: JSON.stringify({ success: false, error: 'Invalid JSON' })
+        };
+    }
 
-  // Use Telegram Bot API to fetch the file
-  try {
-    const TELEGRAM_BOT_TOKEN = "7615071981:AAFohL0Rb10_U2fALN1t8ns5vPMI5d6sEA0";
-    const CHAT_ID = "YOUR_CHAT_ID"; // Replace with chat ID where the file is stored
-    const FILE_ID = "YOUR_FILE_ID"; // Replace with the file ID corresponding to this token
+    const { videoId } = body;
 
-    const fileInfo = await axios.get(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${FILE_ID}`
-    );
+    if (!videoId) {
+        console.log("Missing videoId");
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            body: JSON.stringify({ success: false, error: 'Missing videoId' })
+        };
+    }
 
-    const filePath = fileInfo.data.result.file_path;
-    const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+    try {
+        console.log(`Received video link for video ID: ${videoId}`);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ download_url: fileUrl }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Failed to fetch the file!" }),
-    };
-  }
+        // Fetch video link from database
+        const videoLink = await getVideoLinkFromDatabase(videoId);
+
+        if (!videoLink) {
+            console.log('Video not found in database');
+            return {
+                statusCode: 404,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type'
+                },
+                body: JSON.stringify({ success: false, error: 'Video not found' })
+            };
+        }
+
+        // Send video link to bot
+        const botServerUrl = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`;
+        const response = await fetch(botServerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: process.env.USER_CHAT_ID,
+                text: `Here is your video link: ${videoLink}`
+            })
+        });
+
+        if (!response.ok) {
+            console.error('Error response from bot server:', response.status, response.statusText);
+            throw new Error(`Error response from bot server: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response from bot server:', data);
+
+        return {
+            statusCode: 200,
+            headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' },
+            body: JSON.stringify({ success: true, message: 'Video link sent!' })
+        };
+    } catch (error) {
+        console.error('Error sending video link:', error);
+        return {
+            statusCode: 500,
+            headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' },
+            body: JSON.stringify({ success: false, error: 'Internal Server Error' })
+        };
+    }
 };
+
+async function getVideoLinkFromDatabase(videoId) {
+    console.log(`Retrieving video link for ID: ${videoId}`);
+    return `https://your-video-storage.com/videos/${videoId}.mp4`;
+}

@@ -1,41 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Get File</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Video Link</title>
 </head>
 <body>
-  <h1>File Delivery</h1>
-  <p>Click the button below to confirm and receive your file in Telegram.</p>
-  <button id="get-link-btn">Get File</button>
+    <button id="getLink" data-video-id="your_video_id_here">Get Link</button>
 
-  <script>
-    document.getElementById("get-link-btn").addEventListener("click", async () => {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get("token");
-
-      if (!token) {
-        alert("Invalid or missing token.");
-        return;
-      }
-
-      try {
-        // Replace this URL with your bot's backend API
-        const response = await fetch(`https://your-backend-server.com/api/send-file?token=${token}`, {
-          method: "POST",
-        });
-
-        if (response.ok) {
-          alert("The file has been sent to your Telegram account!");
-        } else {
-          alert("Failed to send the file. Please try again later.");
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get('videoId');
+        
+        if (videoId) {
+            document.getElementById('getLink').setAttribute('data-video-id', videoId);
         }
-      } catch (error) {
-        console.error("Error sending the request:", error);
-        alert("Something went wrong. Please try again later.");
-      }
-    });
-  </script>
+
+        document.getElementById('getLink').addEventListener('click', function() {
+            const videoId = this.getAttribute('data-video-id');
+
+            fetch('http://127.0.0.1:5000/send-video-link', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ videoId: videoId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
 </body>
 </html>

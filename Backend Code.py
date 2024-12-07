@@ -1,45 +1,60 @@
 from flask import Flask, request, jsonify
+import logging
+import sqlite3
 from telethon import TelegramClient
+from telethon.tl.types import Document, DocumentAttributeFilename
 
 app = Flask(__name__)
 
-# Telegram API credentials
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Your API ID, hash, and bot token obtained from https://my.telegram.org and BotFather
 api_id = 24492108
 api_hash = '82342323c63f78f9b0bc7a3ecd7c2509'
 bot_token = '7615071981:AAFohL0Rb10_U2fALN1t8ns5vPMI5d6sEA0'
+user_chat_id = 7951420571  # Replace with the actual user chat ID
 
-# Telegram bot client
-bot_client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
+client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
-# Link tokens from the bot
-link_tokens = {}
+# Connect to SQLite database
+conn = sqlite3.connect('files.db')
+c = conn.cursor()
 
+@app.route('/send-video-link', methods=['POST'])
+def send_video_link():
+    data = request.json
+    video_id = data.get('videoId')
 
-@app.route('/api/send-file', methods=['POST'])
-def send_file():
-    token = request.args.get('token')
-    if not token or token not in link_tokens:
-        return jsonify({"error": "Invalid or expired token."}), 400
+    if not video_id:
+        return jsonify({"success": False, "error": "Missing videoId"}), 400
 
-    # Retrieve file data from token
-    file_data = link_tokens.pop(token)
-    chat_id = file_data['chat_id']
-    caption = file_data['caption']
-    file_name = file_data['file_name']
-    file_id = file_data['id']
+    c.execute("SELECT id, access_hash, file_reference, mime_type, caption, file_name FROM files WHERE id=?", (video_id,))
+    db_result = c.fetchone()
 
-    # Send the file to the user via Telegram bot
-    with bot_client:
-        bot_client.loop.run_until_complete(
-            bot_client.send_file(
-                chat_id,
-                file=file_id,
-                caption=caption or f"Here is your file: {file_name}"
-            )
-        )
+    if not db_result:
+        return jsonify({"success": False, "error": "Video not found"}), 404
 
-    return jsonify({"message": "File sent successfully."}), 200
+    id, access_hash, file_reference, mime_type, caption, file_name = db_result
+    logging.debug(f"Sending video file: id={id}, access_hash={access_hash}, file_reference={file_reference}, mime_type={mime_type}, caption={caption}, file_name={file_name}")
 
+    document = Document(
+        id=int(id),
+        access_hash=int(access_hash),
+        file_reference=file_reference,
+        date=None,
+        mime_type=mime_type,
+        size=None,
+        dc_id=None,
+        attributes=[DocumentAttributeFilename(file_name=file_name)] if file_name else []
+    )
+
+    async def send_file():
+        await client.send_file(user_chat_id, document, caption=caption)
+
+    client.loop.run_until_complete(send_file())
+
+    return jsonify({"success": True, "message": "Video link sent!"}), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
